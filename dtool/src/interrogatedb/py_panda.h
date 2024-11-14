@@ -16,6 +16,7 @@
 #include "pnotify.h"
 #include "vector_uchar.h"
 #include "register_type.h"
+#include "interrogate_request.h"
 
 #if defined(HAVE_PYTHON) && !defined(CPPPARSER)
 
@@ -181,7 +182,14 @@ static void Dtool_FreeInstance_##CLASS_NAME(PyObject *self) {\
 // forward declared of typed object.  We rely on the fact that typed objects
 // are uniquly defined by an integer.
 
+#if PY_VERSION_HEX >= 0x030d0000
+class Dtool_TypeMap : public std::map<std::string, Dtool_PyTypedObject *> {
+public:
+  PyMutex _lock { 0 };
+};
+#else
 typedef std::map<std::string, Dtool_PyTypedObject *> Dtool_TypeMap;
+#endif
 
 EXPCL_PYPANDA Dtool_TypeMap *Dtool_GetGlobalTypeMap();
 
@@ -338,6 +346,7 @@ struct LibraryDef {
   PyMethodDef *const _methods;
   const Dtool_TypeDef *const _types;
   Dtool_TypeDef *const _external_types;
+  const InterrogateModuleDef *const _module_def;
 };
 
 #if PY_MAJOR_VERSION >= 3
